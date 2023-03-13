@@ -75,8 +75,6 @@ class REC_Processor(Processor):
         accuracy = sum(hit_top_k) * 1.0 / len(hit_top_k)
         self.io.print_log('\tTop{}: {:.2f}%'.format(k, 100 * accuracy))
 
-    def freeze_layers(self):
-        for param in self.model.st_gcn_networks[0:9].parameters():
     def freeze_layers(self, layers):
         for param in layers.parameters():
             param.requires_grad=False
@@ -86,11 +84,10 @@ class REC_Processor(Processor):
         with open(filename, "a") as f:
             out = str(state_dict)
             print(out, file=f)
+
     def train(self):
         self.model.train()
         self.adjust_lr()
-        # self.freeze_layers()
-        # self.save_state_dict_to_file("draft_output.txt")
         self.freeze_layers(self.model.st_gcn_networks[0:9])
         self.save_state_dict_to_file("draft_output.txt")
         loader = self.data_loader['train']
