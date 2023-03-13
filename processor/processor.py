@@ -101,6 +101,8 @@ class Processor(IO):
         self.show_epoch_info()
 
     def start(self):
+        # if os.path.exists("draft_output.txt"):
+        #     os.remove("draft_output.txt")
         self.io.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
 
         # training phase
