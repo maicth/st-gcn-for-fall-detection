@@ -103,6 +103,8 @@ class Processor(IO):
     def start(self):
         # if os.path.exists("draft_output.txt"):
         #     os.remove("draft_output.txt")
+        if os.path.exists("draft_output.txt"):
+            os.remove("draft_output.txt")
         self.io.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
 
         # training phase

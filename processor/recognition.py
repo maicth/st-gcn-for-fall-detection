@@ -77,6 +77,8 @@ class REC_Processor(Processor):
 
     def freeze_layers(self):
         for param in self.model.st_gcn_networks[0:9].parameters():
+    def freeze_layers(self, layers):
+        for param in layers.parameters():
             param.requires_grad=False
 
     def save_state_dict_to_file(self, filename):
@@ -89,6 +91,8 @@ class REC_Processor(Processor):
         self.adjust_lr()
         # self.freeze_layers()
         # self.save_state_dict_to_file("draft_output.txt")
+        self.freeze_layers(self.model.st_gcn_networks[0:9])
+        self.save_state_dict_to_file("draft_output.txt")
         loader = self.data_loader['train']
         loss_value = []
 
