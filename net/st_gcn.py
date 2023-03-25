@@ -52,6 +52,17 @@ class Model(nn.Module):
             st_gcn(128, 256, kernel_size, 2, **kwargs),
             st_gcn(256, 256, kernel_size, 1, **kwargs),
             st_gcn(256, 256, kernel_size, 1, **kwargs),
+
+            # st_gcn(in_channels, 64, kernel_size, 1, 300, residual=False, **kwargs0),
+            # st_gcn(64, 64, kernel_size, 1, 300, **kwargs),
+            # st_gcn(64, 64, kernel_size, 1, 300, **kwargs),
+            # st_gcn(64, 64, kernel_size, 1, 300, **kwargs),
+            # st_gcn(64, 128, kernel_size, 2, 150, **kwargs),
+            # st_gcn(128, 128, kernel_size, 1, 150, **kwargs),
+            # st_gcn(128, 128, kernel_size, 1, 150, **kwargs),
+            # st_gcn(128, 256, kernel_size, 2, 75, **kwargs),
+            # st_gcn(256, 256, kernel_size, 1, 75, **kwargs),
+            # st_gcn(256, 256, kernel_size, 1, 75, **kwargs),
         ))
 
         # initialize parameters for edge importance weighting
@@ -62,7 +73,8 @@ class Model(nn.Module):
             ])
         else:
             self.edge_importance = [1] * len(self.st_gcn_networks)
-
+        # attention block
+        self.attention_block = AttentionBlock(0.7, 75)
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
 
@@ -77,10 +89,11 @@ class Model(nn.Module):
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
 
-        # forwad
+        # forward
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
             x, _ = gcn(x, self.A * importance)
 
+        x = self.attention_block(x)
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
         x = x.view(N, M, -1, 1, 1).mean(dim=1)
@@ -102,7 +115,7 @@ class Model(nn.Module):
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
 
-        # forwad
+        # forward
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
             x, _ = gcn(x, self.A * importance)
 
@@ -129,7 +142,7 @@ class st_gcn(nn.Module):
     Shape:
         - Input[0]: Input graph sequence in :math:`(N, in_channels, T_{in}, V)` format
         - Input[1]: Input graph adjacency matrix in :math:`(K, V, V)` format
-        - Output[0]: Outpu graph sequence in :math:`(N, out_channels, T_{out}, V)` format
+        - Output[0]: Output graph sequence in :math:`(N, out_channels, T_{out}, V)` format
         - Output[1]: Graph adjacency matrix for output data in :math:`(K, V, V)` format
 
         where
@@ -145,6 +158,7 @@ class st_gcn(nn.Module):
                  out_channels,
                  kernel_size,
                  stride=1,
+                 # in_attention=300,
                  dropout=0,
                  residual=True):
         super().__init__()
@@ -155,7 +169,7 @@ class st_gcn(nn.Module):
 
         self.gcn = ConvTemporalGraphical(in_channels, out_channels,
                                          kernel_size[1])
-
+        # original tcn
         self.tcn = nn.Sequential(
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
@@ -169,6 +183,9 @@ class st_gcn(nn.Module):
             nn.BatchNorm2d(out_channels),
             nn.Dropout(dropout, inplace=True),
         )
+
+        # self.se_block = SEBlock(out_channels)
+        # self.tcn = TemporalGatedUnit(out_channels, out_channels, (kernel_size[0], 1), padding, (stride, 1))
 
         if not residual:
             self.residual = lambda x: 0
@@ -186,6 +203,8 @@ class st_gcn(nn.Module):
                 nn.BatchNorm2d(out_channels),
             )
 
+        # self.attention_block = AttentionBlock(0.9, in_attention)
+        # self.out_channels = out_channels
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x, A):
@@ -193,5 +212,10 @@ class st_gcn(nn.Module):
         res = self.residual(x)
         x, A = self.gcn(x, A)
         x = self.tcn(x) + res
-
-        return self.relu(x), A
+        x = self.relu(x)
+        # x = self.attention_block(x)
+        # new TCN = SE Block + TCN + SE Block
+        # x = self.se_block(x)
+        # x = self.tcn(x)
+        # x = self.se_block(x) + res
+        return x, A
