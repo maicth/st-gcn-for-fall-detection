@@ -47,7 +47,7 @@ def read_xyz(file, max_body=2, num_joint=25):
         for nb, b in enumerate(f['bodyInfo']):
             for nj, j in enumerate(b['jointInfo']):
                 if nb < max_body and nj < num_joint:
-                    data[:, nf, nj, nb] = [j['x'], j['y'], j['z']]
+                    data[:, nf, nj, nb] = [j['x']/1000, j['y']/1000, j['z']/1000]
                 else:
                     pass
     return data
