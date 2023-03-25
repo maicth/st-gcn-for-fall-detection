@@ -11,7 +11,7 @@ from utils.tst_read_skeleton import read_xyz
 training_subjects = [1, 3, 5, 7, 9, 10, 11]
 max_body = 2
 num_joint = 25
-max_frame = 500
+max_frame = 300
 toolbar_width = 30
 
 def print_toolbar(rate, annotation=''):
