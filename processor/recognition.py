@@ -4,6 +4,7 @@ import sys
 import argparse
 import yaml
 import numpy as np
+from collections import OrderedDict
 
 # torch
 import torch
@@ -15,6 +16,7 @@ import torchlight
 from torchlight import str2bool
 from torchlight import DictAction
 from torchlight import import_class
+from sklearn.metrics import roc_auc_score, accuracy_score, confusion_matrix
 
 from .processor import Processor
 
@@ -31,6 +33,15 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
+
+
+# class ActivationHook():
+#     def __init__(self, name):
+#         self.name = name
+#         self.activation = {}
+#
+#     def hook(self, model, input, output):
+#         self.activation[self.name] = output.detach()
 
 class REC_Processor(Processor):
     """
@@ -88,7 +99,8 @@ class REC_Processor(Processor):
     def train(self):
         self.model.train()
         self.adjust_lr()
-        self.freeze_layers(self.model.st_gcn_networks[0:9])
+        freeze_layers = self.model.st_gcn_networks[0:9]
+        self.freeze_layers(freeze_layers)
         self.save_state_dict_to_file("draft_output.txt")
         loader = self.data_loader['train']
         loss_value = []
@@ -100,9 +112,15 @@ class REC_Processor(Processor):
             label = label.long().to(self.dev)
 
             # forward
+            # act_hook = ActivationHook('data_bn')
+            # self.model.data_bn.register_forward_hook(act_hook.hook)
             output = self.model(data)
             loss = self.loss(output, label)
 
+            # print("data_bn:",act_hook.activation['data_bn'])
+            # print("output:", output)
+            # print("label:", label)
+            # print("loss:", loss)
             # backward
             self.optimizer.zero_grad()
             loss.backward()
@@ -151,8 +169,26 @@ class REC_Processor(Processor):
             self.show_epoch_info()
 
             # show top-k accuracy
-            for k in self.arg.show_topk:
-                self.show_topk(k)
+            # for k in self.arg.show_topk:
+            #     self.show_topk(k)
+
+            # show metric for fall detection
+            y_true = self.label
+            y_pred = np.argmax(self.result, axis=1)
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+            sensitivity = tp / (tp + fn)
+            specificity = tn / (tn + fp)
+            accuracy = accuracy_score(y_true, y_pred)
+            f1 = 2 * tp / (2 * tp + fp + fn)
+            roc_auc = roc_auc_score(y_true, y_pred)
+
+            info = '\nTrue Positive: {}\n' \
+                   'True Negative: {}\n' \
+                   'False Positive: {}\n' \
+                   'False Negative: {}\n' \
+                   'accuracy: {} sensitivity: {} specificity: {} f1: {} roc_auc: {}'\
+                .format(tp, tn, fp, fn, accuracy, sensitivity, specificity, f1, roc_auc)
+            self.io.print_log(info)
 
     @staticmethod
     def get_parser(add_help=False):
