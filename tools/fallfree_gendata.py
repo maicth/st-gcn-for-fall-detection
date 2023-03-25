@@ -11,7 +11,7 @@ from utils.fallfree_read_skeleton import read_xyz
 training_subjects = [1]
 max_body = 2
 num_joint = 25
-max_frame = 900
+max_frame = 300
 toolbar_width = 30
 
 def print_toolbar(rate, annotation=''):
@@ -40,7 +40,7 @@ def gendata(data_path,
     for filename in os.listdir(data_path):
         element_name = filename.split('-')
         subject_id = int(element_name[-3])
-        isfall = int(element_name[0] == 'Fall')
+        isfall = 0 if element_name[0] == 'Fall' else 1
         istraining = (subject_id in training_subjects)
 
         if part == 'train':
