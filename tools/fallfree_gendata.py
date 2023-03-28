@@ -40,7 +40,7 @@ def gendata(data_path,
     for filename in os.listdir(data_path):
         element_name = filename.split('-')
         subject_id = int(element_name[-3])
-        isfall = 0 if element_name[0] == 'Fall' else 1
+        isfall = 1 if element_name[0] == 'Fall' else 0
         istraining = (subject_id in training_subjects)
 
         if part == 'train':
