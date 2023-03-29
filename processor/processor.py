@@ -15,7 +15,7 @@ import torchlight
 from torchlight import str2bool
 from torchlight import DictAction
 from torchlight import import_class
-
+from matplotlib.pylab import plt
 import os
 
 from .io import IO
@@ -42,6 +42,8 @@ class Processor(IO):
         self.iter_info = dict()
         self.epoch_info = dict()
         self.meta_info = dict(epoch=0, iter=0)
+        self.train_loss = dict()
+        self.val_loss = dict()
 
     def load_optimizer(self):
         pass
@@ -88,6 +90,20 @@ class Processor(IO):
             if self.arg.pavi_log:
                 self.io.log('train', self.meta_info['iter'], self.iter_info)
 
+    def plot_train_val_loss(self, train_epochs, train_loss, val_epochs, val_loss):
+        # Plot and label the training and validation loss values
+        plt.plot(train_epochs, train_loss, label='Training Loss')
+        plt.plot(val_epochs, val_loss, label='Validation Loss')
+        # Add in a title and axes labels
+        plt.title('Training and Validation Loss')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        # Set the tick locations
+        plt.xticks(np.arange(0, self.arg.num_epoch, 2))
+        # Display the plot
+        plt.legend(loc='best')
+        plt.show()
+
     def train(self):
         for _ in range(100):
             self.iter_info['loss'] = 0
@@ -116,6 +132,7 @@ class Processor(IO):
                 # training
                 self.io.print_log('Training epoch: {}'.format(epoch))
                 self.train()
+                self.train_loss[epoch] = self.epoch_info['mean_loss']
                 self.io.print_log('Done.')
 
                 # save model
@@ -129,7 +146,15 @@ class Processor(IO):
                         epoch + 1 == self.arg.num_epoch):
                     self.io.print_log('Eval epoch: {}'.format(epoch))
                     self.test()
+                    self.val_loss[epoch] = self.epoch_info['mean_loss']
                     self.io.print_log('Done.')
+
+            train_epochs = self.train_loss.keys()
+            val_epochs = self.val_loss.keys()
+            train_loss = self.train_loss.values()
+            val_loss = self.val_loss.values()
+            self.plot_train_val_loss(train_epochs, train_loss, val_epochs, val_loss)
+
         # test phase
         elif self.arg.phase == 'test':
 
