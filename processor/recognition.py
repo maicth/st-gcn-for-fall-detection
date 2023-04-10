@@ -34,15 +34,6 @@ def weights_init(m):
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
 
-
-# class ActivationHook():
-#     def __init__(self, name):
-#         self.name = name
-#         self.activation = {}
-#
-#     def hook(self, model, input, output):
-#         self.activation[self.name] = output.detach()
-
 class REC_Processor(Processor):
     """
         Processor for Skeleton-based Action Recgnition
@@ -87,7 +78,9 @@ class REC_Processor(Processor):
         self.io.print_log('\tTop{}: {:.2f}%'.format(k, 100 * accuracy))
 
     def freeze_layers(self, layers):
-        "used for pretrained models, stop learning at some layers"
+        """
+            used for pretrained models, stop learning at some layers
+        """
         for param in layers.parameters():
             param.requires_grad=False
 
@@ -112,16 +105,9 @@ class REC_Processor(Processor):
             data = data.float().to(self.dev)
             label = label.long().to(self.dev)
 
-            # forward
-            # act_hook = ActivationHook('data_bn')
-            # self.model.data_bn.register_forward_hook(act_hook.hook)
             output = self.model(data)
             loss = self.loss(output, label)
 
-            # print("data_bn:",act_hook.activation['data_bn'])
-            # print("output:", output)
-            # print("label:", label)
-            # print("loss:", loss)
             # backward
             self.optimizer.zero_grad()
             loss.backward()
@@ -168,10 +154,6 @@ class REC_Processor(Processor):
             self.label = np.concatenate(label_frag)
             self.epoch_info['mean_loss']= np.mean(loss_value)
             self.show_epoch_info()
-
-            # show top-k accuracy
-            # for k in self.arg.show_topk:
-            #     self.show_topk(k)
 
             # show metric for fall detection
             y_true = self.label
