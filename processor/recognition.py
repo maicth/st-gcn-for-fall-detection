@@ -87,6 +87,7 @@ class REC_Processor(Processor):
         self.io.print_log('\tTop{}: {:.2f}%'.format(k, 100 * accuracy))
 
     def freeze_layers(self, layers):
+        "used for pretrained models, stop learning at some layers"
         for param in layers.parameters():
             param.requires_grad=False
 
