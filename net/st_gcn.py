@@ -5,6 +5,7 @@ from torch.autograd import Variable
 
 from net.utils.tgcn import ConvTemporalGraphical
 from net.utils.graph import Graph
+from net.utils.sfd_gcn import AttentionBlock
 
 class Model(nn.Module):
     r"""Spatial temporal graph convolutional networks.
