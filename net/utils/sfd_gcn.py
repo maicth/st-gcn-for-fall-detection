@@ -60,11 +60,13 @@ class AttentionBlock(nn.Module):
         self.alpha = alpha
         self.pooling = nn.AdaptiveAvgPool2d(1)
         self.fcn = nn.Sequential(
-            nn.Linear(in_channels, in_channels),
-            nn.ReLU(inplace=True),
-            nn.Linear(in_channels, in_channels ** 2)
+            nn.Linear(in_channels, in_channels//4),
+            nn. BatchNorm1d(in_channels//4),
+            # nn.ReLU(inplace=True),
+            nn.Sigmoid(),
+            nn.Linear(in_channels//4, in_channels)
         )
-        self.softmax = nn.Softmax(dim=2)
+        self.softmax = nn.Softmax(dim=1)
         # self.softmax = nn.Sigmoid()
 
     def forward(self, x):
@@ -73,11 +75,10 @@ class AttentionBlock(nn.Module):
         avg_pooling = self.pooling(x).view(N, T)
         # fcn = self.fcn(avg_pooling)
         # x1 = self.softmax(fcn).view(N, T, T)
-        # fix for Softmax(dim=2)
-        fcn = self.fcn(avg_pooling).view(N,T,T)
+        fcn = self.fcn(avg_pooling).view(N,T)
         x1 = self.softmax(fcn)
-        # x1 = (1-self.softmax(fcn)).view(N, T, T)
-        x2 = x.permute(0,2,1,3).contiguous().view(N, T, C*V)
-        x3 = torch.matmul(x1, x2).view(N, T, C, V)
+        # x2 = x.permute(0,2,1,3).contiguous().view(N, T, C*V)
+        # x3 = torch.matmul(x1, x2).view(N, T, C, V)
+        x3 = x * x1.view(N,T,1,1).expand_as(x)
 
         return (x + x3 * self.alpha).permute(0, 2, 1, 3).contiguous()
