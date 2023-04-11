@@ -58,8 +58,6 @@ class AIPdemo(IO):
                 else:
                     print("Non Fall")
                 num_check += 1
-                if num_check == len(dataset):
-                    break
 
             # display text in 2 secs
             if play_text_flag == 1:
@@ -67,9 +65,13 @@ class AIPdemo(IO):
                 play_text_count += 1
             if play_text_count >= fps*2:
                 play_text_flag = 0
+                play_text_count = 0
 
-            cv2.imshow('video', cur_frame)
             if cv2.waitKey(int(1000/50)) & 0xFF == ord('q'):
+                break
+            cv2.imshow('video', cur_frame)
+            cv2.waitKey(int(1000/self.arg.model_fps))
+            if num_check == len(dataset):
                 break
 
         video_capture.release()
@@ -96,7 +98,7 @@ class AIPdemo(IO):
                             default=30,
                             type=int)
         parser.add_argument('--batch_size',
-                            type=int, 
+                            type=int,
                             default=256,
                             help='training batch size')
         parser.add_argument('--out_path',
