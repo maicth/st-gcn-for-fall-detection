@@ -1,0 +1,17 @@
+weights: ./models/epoch50_modelnew-linear_bn_sigmoid_linear_softmax_05_100.pt
+model_fps: 30
+video: ./demo/input/Non-fall-1-70-4_RGB.avi
+len_sub_video: 2
+# model
+model: net.st_gcn.Model
+model_args:
+  in_channels: 3
+  num_class: 2
+  edge_importance_weighting: True
+  graph_args:
+    layout: 'ntu-rgb+d'
+    strategy: 'spatial'
+
+# training
+device: [0]
+batch_size: 4
