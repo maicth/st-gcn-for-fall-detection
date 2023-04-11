@@ -8,11 +8,11 @@ def create_skeleton_list(skeleton_path, len_sub_video):
     skeleton_list = []
     with open(skeleton_path, "r") as f:
         data = list(csv.reader(f))
-    for i in range(0,len(data),30*25):  # 1 sec = 30 frames = 30*25 joints
-        sub_skeleton = data[i:i+len_sub_video*30*25]    # each sub skeleton = 6 secs video
+    for i in range(0,len(data),len_sub_video*25):  # 1 sec = 30 frames = 30*25 joints
+        sub_skeleton = data[i:i+len_sub_video*25]    # each sub skeleton = 6 secs video
         skeleton_list.append(sub_skeleton)
 
-        if len(sub_skeleton) < len_sub_video*30*25:
+        if len(sub_skeleton) < len_sub_video*25:
             break
     return skeleton_list
 
