@@ -1,5 +1,5 @@
 # Introduction
-Skeleton-based fall detection using Computer Vision is to develop a model using ST-GCN combines with transfer learning technique and attention mechanism to detect falls more accurately. 
+Skeleton-based fall detection using Computer Vision develops a model using ST-GCN combines with transfer learning technique and attention mechanism to detect falls more accurately. 
 
 # Data
 - Use NTU RGB+D to pre-train ST-GCN model
