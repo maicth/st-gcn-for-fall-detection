@@ -16,7 +16,7 @@ class AIPdemo(IO):
         gendata(self.arg.out_path, skeleton_list)
         # load data
         dataset = torch.from_numpy(np.load("./demo/demo_data.npy"))
-        print("len dataset:", len(dataset))
+        # print("len dataset:", len(dataset))
         play_text_count = 0
         play_text_flag = 0
         # start capture video
@@ -27,12 +27,11 @@ class AIPdemo(IO):
         frame_index = 0
         num_check = 0
         # text properties
-        text = "Fall"
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_size = 2
-        org = (50,50)
+        font_size = 5
+        org = (300,300)
         color = (0,0,255)   # red
-        thickness = 5
+        thickness = 15
 
         while (video_capture.isOpened()):
             ret, cur_frame = video_capture.read()
@@ -40,6 +39,7 @@ class AIPdemo(IO):
 
             if frame_index == self.arg.len_sub_video*(num_check+1) or frame_index == num_frames:
                 C, T, V, M = dataset[num_check].shape
+                print('M=',M)
                 data = dataset[num_check].resize_(1,C,T,V,M)    # N,C,T,V,M
                 data = data.float().to(self.dev)
 
@@ -61,11 +61,11 @@ class AIPdemo(IO):
 
             # display text in 2 secs
             if play_text_flag == 1:
-                cv2.putText(cur_frame, text, org, font, font_size, color, thickness)
+                cv2.putText(cur_frame, 'FALL', org, font, font_size, color, thickness)
                 play_text_count += 1
-            elif play_text_flag == 2:
-                cv2.putText(cur_frame, 'FALL WARNING', org, font, font_size, (0,204,255), thickness)
-                play_text_count += 1
+            # elif play_text_flag == 2:
+            #     cv2.putText(cur_frame, 'FALL WARNING', org, font, font_size, (0,204,255), thickness)
+            #     play_text_count += 1
             if play_text_count >= fps*2:
                 play_text_flag = 0
                 play_text_count = 0
@@ -94,7 +94,7 @@ class AIPdemo(IO):
                             default='./resource/media/skateboarding.mp4',
                             help='Path to video')
         parser.add_argument('--len_sub_video',
-                            default=4,
+                            default=120,
                             type=int,
                             help='Length of sub-video to gen data')
         parser.add_argument('--model_fps',
