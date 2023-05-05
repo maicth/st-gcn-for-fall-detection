@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
+import matplotlib.pyplot as plt
 
 class AttentionBlock(nn.Module):
     def __init__(self, alpha, in_channels=300):
@@ -21,6 +22,9 @@ class AttentionBlock(nn.Module):
         avg_pooling = self.pooling(x).view(N, T)
         fcn = self.fcn(avg_pooling).view(N,T)
         x1 = self.softmax(fcn)
+        a = x1.cpu().numpy()
+        plt.imshow(a, cmap='hot', interpolation='nearest')
+        plt.show()
         x3 = x * x1.view(N,T,1,1).expand_as(x)
 
         return (x + x3 * self.alpha).permute(0, 2, 1, 3).contiguous()
