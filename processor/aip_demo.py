@@ -22,6 +22,8 @@ class AIPdemo(IO):
         # start capture video
         video_capture = cv2.VideoCapture(self.arg.video)
         fps = video_capture.get(cv2.CAP_PROP_FPS)
+        height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
         num_frames = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
         print("num frames:", num_frames)
         frame_index = 0
@@ -29,7 +31,7 @@ class AIPdemo(IO):
         # text properties
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_size = 5
-        org = (300,300)
+        org = (200,200)
         color = (0,0,255)   # red
         thickness = 15
 
@@ -39,7 +41,6 @@ class AIPdemo(IO):
 
             if frame_index == self.arg.len_sub_video*(num_check+1) or frame_index == num_frames:
                 C, T, V, M = dataset[num_check].shape
-                print('M=',M)
                 data = dataset[num_check].resize_(1,C,T,V,M)    # N,C,T,V,M
                 data = data.float().to(self.dev)
 
@@ -59,6 +60,7 @@ class AIPdemo(IO):
                     print("Non Fall")
                 num_check += 1
 
+            cur_frame = cv2.resize(cur_frame, (int(width/2), int(height/2)))
             # display text in 2 secs
             if play_text_flag == 1:
                 cv2.putText(cur_frame, 'FALL', org, font, font_size, color, thickness)
@@ -75,6 +77,8 @@ class AIPdemo(IO):
             cv2.imshow('video', cur_frame)
             cv2.waitKey(int(100/self.arg.model_fps))
             if num_check == len(dataset):
+                cv2.imshow('video', cur_frame)
+                cv2.waitKey(30000)
                 break
 
         video_capture.release()
